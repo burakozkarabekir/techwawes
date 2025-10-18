@@ -80,6 +80,7 @@ For persistent storage that survives server restarts:
    ```bash
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/memagent
    ```
+   **⚠️ Replace with your actual MongoDB credentials**
 
 3. **Install dependencies**
    ```bash

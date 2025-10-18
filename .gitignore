@@ -61,3 +61,5 @@ instance/
 # Deployment
 *.key
 *.pem
+# Environment Variables (DO NOT COMMIT)
+.env
