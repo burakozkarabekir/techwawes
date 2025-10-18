@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mem-agent | Memory-Enhanced LLM Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                    <h1>mem-agent</h1>
+                </div>
+                <p class="tagline">Memory-Enhanced LLM Agent with Reinforcement Learning</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Memory Statistics</h3>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Memories</span>
+                            <span class="stat-value" id="memory-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Conversations</span>
+                            <span class="stat-value" id="conversation-count">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Memory Bank</h3>
+                    <div id="memory-list" class="memory-list">
+                        <p class="empty-state">No memories stored yet</p>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <button class="btn btn-secondary" onclick="showAddMemoryModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Memory
+                    </button>
+                    <button class="btn btn-danger" onclick="clearMemory()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Clear All
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>About</h3>
+                    <p class="about-text">
+                        This interface demonstrates mem-agent, a memory-augmented LLM agent trained using reinforcement learning. 
+                        The agent can retain and utilize information from previous interactions.
+                    </p>
+                    <a href="https://github.com/firstbatchxyz/mem-agent" target="_blank" class="link">
+                        View on GitHub →
+                    </a>
+                </div>
+            </aside>
+
+            <!-- Chat Area -->
+            <main class="chat-area">
+                <div class="chat-container">
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="welcome-message">
+                            <h2>👋 Welcome to mem-agent</h2>
+                            <p>Start a conversation with the memory-enhanced AI agent. The agent can remember information from your conversation and use it in future responses.</p>
+                            <div class="feature-grid">
+                                <div class="feature-card">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                    <h4>Memory Storage</h4>
+                                    <p>Stores and retrieves relevant information</p>
+                                </div>
+                                <div class="feature-card">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    <h4>Context Aware</h4>
+                                    <p>Uses conversation history effectively</p>
+                                </div>
+                                <div class="feature-card">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                                        <path d="M12 2v10h10"></path>
+                                    </svg>
+                                    <h4>RL-Enhanced</h4>
+                                    <p>Trained using reinforcement learning</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <div class="input-wrapper">
+                            <textarea 
+                                id="user-input" 
+                                placeholder="Type your message here..."
+                                rows="1"
+                            ></textarea>
+                            <button id="send-button" class="send-button" onclick="sendMessage()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="input-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="use-memory" checked>
+                                <span>Use Memory</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Memory Modal -->
+    <div id="add-memory-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Memory</h3>
+                <button class="close-button" onclick="closeAddMemoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="memory-key">Memory Key</label>
+                    <input type="text" id="memory-key" placeholder="e.g., user_name, preference, fact">
+                </div>
+                <div class="form-group">
+                    <label for="memory-value">Memory Value</label>
+                    <textarea id="memory-value" rows="3" placeholder="Enter the information to remember..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddMemoryModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="addMemory()">Add Memory</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
