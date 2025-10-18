@@ -1,12 +1,21 @@
+// TechWawes AI - Modern Interface JavaScript
+
 // Global state
 let sessionId = generateSessionId();
 let isLoading = false;
+let memoryPanelOpen = false;
 
-// Initialize
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    setupEventListeners();
-    loadMemoryStats();
+    initializeApp();
 });
+
+function initializeApp() {
+    setupEventListeners();
+    setupNavigation();
+    loadMemoryStats();
+    checkHealth();
+}
 
 // Generate unique session ID
 function generateSessionId() {
@@ -18,30 +27,81 @@ function setupEventListeners() {
     const input = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     
-    // Handle Enter key (Shift+Enter for new line)
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-    
-    // Auto-resize textarea
-    input.addEventListener('input', () => {
-        input.style.height = 'auto';
-        input.style.height = Math.min(input.scrollHeight, 200) + 'px';
-    });
+    if (input) {
+        // Handle Enter key (Shift+Enter for new line)
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Auto-resize textarea
+        input.addEventListener('input', () => {
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        });
+    }
     
     // Modal close on background click
     const modal = document.getElementById('add-memory-modal');
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeAddMemoryModal();
-        }
-    });
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeAddMemoryModal();
+            }
+        });
+    }
 }
 
-// Send message
+// Navigation functions
+function setupNavigation() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    const navToggle = document.querySelector('.nav-toggle');
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').substring(1);
+            scrollToSection(targetId);
+            
+            // Update active link
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+        });
+    });
+    
+    if (navToggle) {
+        navToggle.addEventListener('click', toggleMobileMenu);
+    }
+}
+
+function scrollToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function toggleMobileMenu() {
+    const navLinks = document.querySelector('.nav-links');
+    navLinks.classList.toggle('active');
+}
+
+// Hero section functions
+function startChat() {
+    scrollToSection('demo');
+    setTimeout(() => {
+        const input = document.getElementById('user-input');
+        if (input) input.focus();
+    }, 500);
+}
+
+function scrollToDemo() {
+    scrollToSection('demo');
+}
+
+// Chat functions
 async function sendMessage() {
     const input = document.getElementById('user-input');
     const query = input.value.trim();
@@ -107,9 +167,19 @@ async function sendMessage() {
     }
 }
 
-// Add message to chat
+function sendSuggestion(text) {
+    const input = document.getElementById('user-input');
+    if (input) {
+        input.value = text;
+        sendMessage();
+    }
+}
+
+// Message display functions
 function addMessage(role, text, memories = []) {
     const messagesContainer = document.getElementById('chat-messages');
+    if (!messagesContainer) return;
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
     
@@ -164,9 +234,10 @@ function addMessage(role, text, memories = []) {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// Show typing indicator
 function showTypingIndicator() {
     const messagesContainer = document.getElementById('chat-messages');
+    if (!messagesContainer) return;
+    
     const indicator = document.createElement('div');
     indicator.className = 'message assistant';
     indicator.id = 'typing-indicator';
@@ -176,9 +247,9 @@ function showTypingIndicator() {
         <div class="message-content">
             <div class="message-bubble">
                 <div class="typing-indicator">
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
             </div>
         </div>
@@ -188,7 +259,6 @@ function showTypingIndicator() {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// Remove typing indicator
 function removeTypingIndicator() {
     const indicator = document.getElementById('typing-indicator');
     if (indicator) {
@@ -196,13 +266,14 @@ function removeTypingIndicator() {
     }
 }
 
-// Update send button state
 function updateSendButton() {
     const sendButton = document.getElementById('send-button');
-    sendButton.disabled = isLoading;
+    if (sendButton) {
+        sendButton.disabled = isLoading;
+    }
 }
 
-// Load memory statistics
+// Memory management functions
 async function loadMemoryStats() {
     try {
         const response = await fetch(`/api/memory/stats?session_id=${sessionId}`);
@@ -218,7 +289,6 @@ async function loadMemoryStats() {
     }
 }
 
-// Update memory statistics
 function updateMemoryStats(count) {
     const countEl = document.getElementById('memory-count');
     if (countEl) {
@@ -226,7 +296,6 @@ function updateMemoryStats(count) {
     }
 }
 
-// Update conversation count
 function updateConversationCount(count) {
     const countEl = document.getElementById('conversation-count');
     if (countEl) {
@@ -234,12 +303,17 @@ function updateConversationCount(count) {
     }
 }
 
-// Display memory list
 function displayMemoryList(memories) {
     const listEl = document.getElementById('memory-list');
+    if (!listEl) return;
     
     if (!memories || memories.length === 0) {
-        listEl.innerHTML = '<p class="empty-state">No memories stored yet</p>';
+        listEl.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>No memories stored yet</p>
+            </div>
+        `;
         return;
     }
     
@@ -253,25 +327,48 @@ function displayMemoryList(memories) {
     `).join('');
 }
 
-// Show add memory modal
+// Memory panel functions
+function toggleMemoryPanel() {
+    const panel = document.getElementById('memory-panel');
+    if (panel) {
+        memoryPanelOpen = !memoryPanelOpen;
+        panel.classList.toggle('active', memoryPanelOpen);
+    }
+}
+
+function toggleMemory() {
+    toggleMemoryPanel();
+}
+
+// Memory modal functions
 function showAddMemoryModal() {
     const modal = document.getElementById('add-memory-modal');
-    modal.classList.add('active');
-    document.getElementById('memory-key').focus();
+    if (modal) {
+        modal.classList.add('active');
+        const keyInput = document.getElementById('memory-key');
+        if (keyInput) keyInput.focus();
+    }
 }
 
-// Close add memory modal
 function closeAddMemoryModal() {
     const modal = document.getElementById('add-memory-modal');
-    modal.classList.remove('active');
-    document.getElementById('memory-key').value = '';
-    document.getElementById('memory-value').value = '';
+    if (modal) {
+        modal.classList.remove('active');
+        const keyInput = document.getElementById('memory-key');
+        const valueInput = document.getElementById('memory-value');
+        if (keyInput) keyInput.value = '';
+        if (valueInput) valueInput.value = '';
+    }
 }
 
-// Add memory
 async function addMemory() {
-    const key = document.getElementById('memory-key').value.trim();
-    const value = document.getElementById('memory-value').value.trim();
+    const keyInput = document.getElementById('memory-key');
+    const valueInput = document.getElementById('memory-value');
+    
+    if (!keyInput || !valueInput) return;
+    
+    const key = keyInput.value.trim();
+    const value = valueInput.value.trim();
     
     if (!key || !value) {
         alert('Please fill in both key and value');
@@ -314,8 +411,7 @@ async function addMemory() {
     }
 }
 
-// Clear memory
-async function clearMemory() {
+async function clearAllMemories() {
     if (!confirm('Are you sure you want to clear all memories? This cannot be undone.')) {
         return;
     }
@@ -345,14 +441,33 @@ async function clearMemory() {
     }
 }
 
-// Utility function to escape HTML
+function clearChat() {
+    const messagesContainer = document.getElementById('chat-messages');
+    if (messagesContainer) {
+        messagesContainer.innerHTML = `
+            <div class="welcome-message">
+                <div class="welcome-content">
+                    <i class="fas fa-sparkles"></i>
+                    <h3>Welcome to TechWawes AI!</h3>
+                    <p>I'm your memory-enhanced AI assistant. I can remember our conversations and learn from them. Try asking me about yourself or any topic!</p>
+                    <div class="suggestions">
+                        <button class="suggestion-btn" onclick="sendSuggestion('Tell me about yourself')">Tell me about yourself</button>
+                        <button class="suggestion-btn" onclick="sendSuggestion('What can you remember?')">What can you remember?</button>
+                        <button class="suggestion-btn" onclick="sendSuggestion('Help me with a task')">Help me with a task</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Utility functions
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// Health check on load
 async function checkHealth() {
     try {
         const response = await fetch('/api/health');
@@ -363,5 +478,129 @@ async function checkHealth() {
     }
 }
 
-// Run health check
-checkHealth();
+// Smooth scrolling for navigation
+function smoothScrollTo(target) {
+    const element = document.querySelector(target);
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+}
+
+// Intersection Observer for navigation highlighting
+const observerOptions = {
+    root: null,
+    rootMargin: '-50% 0px -50% 0px',
+    threshold: 0
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const id = entry.target.id;
+            const navLink = document.querySelector(`.nav-link[href="#${id}"]`);
+            if (navLink) {
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                navLink.classList.add('active');
+            }
+        }
+    });
+}, observerOptions);
+
+// Observe sections when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+});
+
+// Add some interactive animations
+document.addEventListener('DOMContentLoaded', () => {
+    // Animate feature cards on scroll
+    const featureCards = document.querySelectorAll('.feature-card');
+    const cardObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, index * 100);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    featureCards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        cardObserver.observe(card);
+    });
+});
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + K to focus chat input
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const input = document.getElementById('user-input');
+        if (input) {
+            input.focus();
+            scrollToSection('demo');
+        }
+    }
+    
+    // Escape to close modals
+    if (e.key === 'Escape') {
+        closeAddMemoryModal();
+        if (memoryPanelOpen) {
+            toggleMemoryPanel();
+        }
+    }
+});
+
+// Add loading states and error handling
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#6366f1'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        z-index: 3000;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Add CSS for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
