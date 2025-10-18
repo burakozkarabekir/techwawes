@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechWawes AI | Memory-Enhanced Agent</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-brain"></i>
+                <span>TechWawes AI</span>
+            </div>
+            <div class="nav-links">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#demo" class="nav-link">Demo</a>
+                <a href="#about" class="nav-link">About</a>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="gradient-text">Memory-Enhanced</span><br>
+                    AI Agent
+                </h1>
+                <p class="hero-description">
+                    Experience the future of AI with our memory-augmented agent that learns, remembers, and evolves with every conversation.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" onclick="startChat()">
+                        <i class="fas fa-comments"></i>
+                        Start Chatting
+                    </button>
+                    <button class="btn btn-secondary" onclick="scrollToDemo()">
+                        <i class="fas fa-play"></i>
+                        See Demo
+                    </button>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="ai-brain">
+                    <div class="brain-core">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="memory-nodes">
+                        <div class="node node-1"></div>
+                        <div class="node node-2"></div>
+                        <div class="node node-3"></div>
+                        <div class="node node-4"></div>
+                        <div class="node node-5"></div>
+                        <div class="node node-6"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose Our AI Agent?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <h3>Persistent Memory</h3>
+                    <p>Our AI remembers every conversation, creating personalized experiences that improve over time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Reinforcement Learning</h3>
+                    <p>Advanced RL algorithms ensure the agent learns optimal memory management strategies.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Lightning Fast</h3>
+                    <p>Optimized for speed with sub-second response times and efficient memory retrieval.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure & Private</h3>
+                    <p>Your data is protected with enterprise-grade security and privacy controls.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chat Interface -->
+    <section id="demo" class="chat-section">
+        <div class="container">
+            <h2 class="section-title">Try It Now</h2>
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="chat-info">
+                        <div class="ai-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="ai-details">
+                            <h3>TechWawes AI</h3>
+                            <span class="status online">Online</span>
+                        </div>
+                    </div>
+                    <div class="chat-controls">
+                        <button class="control-btn" onclick="clearChat()" title="Clear Chat">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="control-btn" onclick="toggleMemory()" title="Toggle Memory">
+                            <i class="fas fa-memory"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="chat-messages" id="chat-messages">
+                    <div class="welcome-message">
+                        <div class="welcome-content">
+                            <i class="fas fa-sparkles"></i>
+                            <h3>Welcome to TechWawes AI!</h3>
+                            <p>I'm your memory-enhanced AI assistant. I can remember our conversations and learn from them. Try asking me about yourself or any topic!</p>
+                            <div class="suggestions">
+                                <button class="suggestion-btn" onclick="sendSuggestion('Tell me about yourself')">Tell me about yourself</button>
+                                <button class="suggestion-btn" onclick="sendSuggestion('What can you remember?')">What can you remember?</button>
+                                <button class="suggestion-btn" onclick="sendSuggestion('Help me with a task')">Help me with a task</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="user-input" 
+                            placeholder="Type your message here..."
+                            rows="1"
+                        ></textarea>
+                        <button id="send-button" class="send-button" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-footer">
+                        <div class="memory-toggle">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="use-memory" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">Memory Enabled</span>
+                            </label>
+                        </div>
+                        <div class="typing-indicator" id="typing-indicator" style="display: none;">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Memory Panel -->
+    <div class="memory-panel" id="memory-panel">
+        <div class="memory-header">
+            <h3><i class="fas fa-database"></i> Memory Bank</h3>
+            <button class="close-panel" onclick="toggleMemoryPanel()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="memory-content">
+            <div class="memory-stats">
+                <div class="stat">
+                    <span class="stat-number" id="memory-count">0</span>
+                    <span class="stat-label">Memories</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" id="conversation-count">0</span>
+                    <span class="stat-label">Conversations</span>
+                </div>
+            </div>
+            <div class="memory-list" id="memory-list">
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No memories stored yet</p>
+                </div>
+            </div>
+            <div class="memory-actions">
+                <button class="btn btn-primary" onclick="showAddMemoryModal()">
+                    <i class="fas fa-plus"></i>
+                    Add Memory
+                </button>
+                <button class="btn btn-danger" onclick="clearAllMemories()">
+                    <i class="fas fa-trash"></i>
+                    Clear All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Memory Modal -->
+    <div class="modal" id="add-memory-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Add Memory</h3>
+                <button class="close-button" onclick="closeAddMemoryModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="memory-key">Memory Key</label>
+                    <input type="text" id="memory-key" placeholder="e.g., user_name, preference, fact">
+                </div>
+                <div class="form-group">
+                    <label for="memory-value">Memory Value</label>
+                    <textarea id="memory-value" rows="3" placeholder="Enter the information to remember..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddMemoryModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="addMemory()">Add Memory</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>About TechWawes AI</h2>
+                    <p>
+                        Built on cutting-edge research from <strong>mem-agent</strong>, our AI represents the next generation 
+                        of conversational AI. Unlike traditional chatbots that forget everything after each session, 
+                        our agent maintains persistent memory across conversations.
+                    </p>
+                    <p>
+                        Using reinforcement learning techniques, the agent learns to decide what information is worth 
+                        remembering and how to retrieve it effectively, creating truly personalized interactions.
+                    </p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">Flask</span>
+                        <span class="tech-tag">MongoDB</span>
+                        <span class="tech-tag">Reinforcement Learning</span>
+                        <span class="tech-tag">OpenRouter API</span>
+                    </div>
+                </div>
+                <div class="about-visual">
+                    <div class="tech-diagram">
+                        <div class="diagram-node user">
+                            <i class="fas fa-user"></i>
+                            <span>User</span>
+                        </div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-node ai">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Agent</span>
+                        </div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-node memory">
+                            <i class="fas fa-database"></i>
+                            <span>Memory Bank</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <i class="fas fa-brain"></i>
+                    <span>TechWawes AI</span>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/firstbatchxyz/mem-agent" target="_blank">
+                        <i class="fab fa-github"></i>
+                        Research Paper
+                    </a>
+                    <a href="https://techwawes.com" target="_blank">
+                        <i class="fas fa-globe"></i>
+                        TechWawes.com
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TechWawes. Built with ❤️ for the AI community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="static/js/app.js"></script>
+</body>
+</html>
