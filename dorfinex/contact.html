@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact — Dorfinex</title>
+    <meta name="description" content="Contact Dorfinex to co-create measurable growth. Send an enquiry about digital consulting, partnerships, AI & analytics, or telecom/ICT.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body data-page="contact">
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-logo">
+                <span class="logo-glitch" data-text="D">D</span>
+            </div>
+            <div class="loader-progress">
+                <div class="loader-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav" id="nav">
+        <div class="nav-container">
+            <a class="nav-logo" href="index.html" aria-label="Dorfinex home">
+                <span class="logo-text">DORFINEX</span>
+                <span class="logo-accent"></span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link" data-page="home"><span>Home</span></a>
+                <a href="about.html" class="nav-link" data-page="about"><span>About</span></a>
+                <a href="services.html" class="nav-link" data-page="services"><span>Services</span></a>
+                <a href="insights.html" class="nav-link" data-page="insights"><span>Insights</span></a>
+                <a href="faq.html" class="nav-link" data-page="faq"><span>FAQ</span></a>
+                <a href="contact.html" class="nav-link cta-nav" data-page="contact"><span>Contact</span></a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-hero">
+            <div class="hero-background">
+                <div class="hologram-effect"></div>
+                <div class="gradient-orb orb-1"></div>
+                <div class="grid-overlay grid-layer-1"></div>
+                <div class="grid-overlay grid-layer-3"></div>
+            </div>
+            <div class="container page-hero-inner">
+                <div class="page-kicker">/// Contact</div>
+                <h1 class="page-title">Let’s co-create measurable growth</h1>
+                <p class="page-subtitle">
+                    Ready to accelerate your growth? Let’s discuss how we can help transform your business with digital consulting and technology solutions.
+                </p>
+            </div>
+        </section>
+
+        <section class="content-section alt">
+            <div class="container">
+                <div class="contact-layout">
+                    <div class="contact-card card">
+                        <h2 class="content-title">Get in touch</h2>
+                        <p class="content-text">
+                            Whether you're an enterprise, vendor, or innovator, we help you unlock new opportunities through innovation, strategy, and partnerships.
+                        </p>
+
+                        <div class="contact-meta">
+                            <div class="contact-meta-item">
+                                <div class="contact-meta-label">Email</div>
+                                <a class="contact-meta-link" href="mailto:contact@dorfinex.com">contact@dorfinex.com</a>
+                            </div>
+                            <div class="contact-meta-item">
+                                <div class="contact-meta-label">LinkedIn</div>
+                                <a class="contact-meta-link" href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer">Follow Dorfinex</a>
+                            </div>
+                            <div class="contact-meta-item">
+                                <div class="contact-meta-label">Response time</div>
+                                <div class="contact-meta-text">We typically respond within 24 hours.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-form card">
+                        <h2 class="content-title">Send us a message</h2>
+                        <p class="content-text">Tell us what you’re aiming for—outcomes, constraints, and timeline.</p>
+
+                        <form id="contactForm" class="js-contact-form" action="https://formspree.io/f/your-form-id" data-form-endpoint="https://formspree.io/f/your-form-id" method="POST" novalidate>
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="name">Full name <span class="req">*</span></label>
+                                    <input id="name" name="name" type="text" autocomplete="name" required>
+                                </div>
+                                <div class="field">
+                                    <label for="email">Business email <span class="req">*</span></label>
+                                    <input id="email" name="email" type="email" autocomplete="email" required>
+                                </div>
+                                <div class="field">
+                                    <label for="company">Company</label>
+                                    <input id="company" name="company" type="text" autocomplete="organization">
+                                </div>
+                                <div class="field">
+                                    <label for="phone">Phone number</label>
+                                    <input id="phone" name="phone" type="tel" autocomplete="tel">
+                                </div>
+                                <div class="field field-full">
+                                    <label for="interest">Service interest</label>
+                                    <select id="interest" name="interest">
+                                        <option value="">Select a service</option>
+                                        <option value="digital-consulting">Digital consulting</option>
+                                        <option value="partnerships-ecosystem">Partnerships &amp; ecosystem</option>
+                                        <option value="tech-advisory">Tech advisory</option>
+                                        <option value="ai-analytics">AI &amp; analytics</option>
+                                        <option value="telecom-ict">Telecom &amp; ICT</option>
+                                        <option value="data-strategy">Data strategy &amp; modernization</option>
+                                        <option value="martech">MarTech solutions</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="field field-full">
+                                    <label for="message">How can we help? <span class="req">*</span></label>
+                                    <textarea id="message" name="message" rows="6" required></textarea>
+                                </div>
+                            </div>
+
+                            <div id="formStatus" class="form-status" role="status" aria-live="polite"></div>
+
+                            <div class="form-actions">
+                                <button class="btn btn-primary" type="submit">
+                                    <span class="btn-text">Send message</span>
+                                    <span class="btn-glow"></span>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                                <a class="btn btn-secondary" href="services.html"><span class="btn-text">Explore services</span></a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">DORFINEX</div>
+                    <p class="footer-tagline">Shaping Digital Growth with Smarter Partnerships</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-heading">Company</h4>
+                        <a href="about.html" class="footer-link">About</a>
+                        <a href="services.html" class="footer-link">Services</a>
+                        <a href="insights.html" class="footer-link">Insights</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4 class="footer-heading">Services</h4>
+                        <a href="services.html#digital-consulting" class="footer-link">Digital consulting</a>
+                        <a href="services.html#partnerships-ecosystem" class="footer-link">Partnerships &amp; ecosystem</a>
+                        <a href="services.html#data-strategy" class="footer-link">Data strategy</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4 class="footer-heading">Connect</h4>
+                        <a href="faq.html" class="footer-link">FAQ</a>
+                        <a href="contact.html" class="footer-link">Contact</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span class="js-current-year">2026</span> Dorfinex. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

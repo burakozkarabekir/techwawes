@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://YOUR_DOMAIN/</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/about.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/services.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/insights.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/faq.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/contact.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/blog/ai-transforming-customer-acquisition.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/blog/marketing-personalization-scale.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/blog/5g-iot-digital-transformation.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/blog/data-driven-growth-strategies.html</loc>
+  </url>
+  <url>
+    <loc>https://YOUR_DOMAIN/blog/strategic-partnerships-revenue-growth.html</loc>
+  </url>
+</urlset>
