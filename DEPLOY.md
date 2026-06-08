@@ -32,23 +32,35 @@ git push -u origin main
 > Ücretsiz katman 15 dk hareketsizlikte uyur; ilk ziyaretçide ~30 sn'de uyanır.
 > Kesintisiz istersen Render'da **Starter (7$/ay)** planına geçersin.
 
-## Adım 3 — GoDaddy domain'i bağla
+## Adım 3 — techwawes.com'u Render'a bağla (GoDaddy DNS)
 
-**Önerilen: alt alan adı** (`analiz.domain.com`) — en kolayı.
+> **Durum:** techwawes.com GoDaddy'de yönetiliyor, şu an GitHub Pages IP'lerini
+> (`185.199.108–111.153`) gösteriyor. Pages kapatıldı → bu eski kayıtları silip
+> Render'a yönlendireceğiz.
 
-1. **Render** → servisin → **Settings → Custom Domains → Add** →
-   `analiz.SENINDOMAININ.com` yaz. Render sana bir hedef verir
-   (ör. `finansal-analist.onrender.com`).
-2. **GoDaddy** → **My Products → DNS** (alan adının yanındaki DNS yönet).
-3. **Add Record:**
+1. **Render** → servisin → **Settings → Custom Domains → Add Custom Domain** →
+   `techwawes.com` ekle (ve istersen `www.techwawes.com`). Render sana **tam değerleri**
+   gösterir: apex için bir **A kaydı IP**'si, www için bir **CNAME** hedefi.
+
+2. **GoDaddy** → **My Products → DNS (techwawes.com)** → şu **eski kayıtları SİL:**
+   - 4 adet **A** kaydı: `@ → 185.199.108.153 / .109 / .110 / .111` (GitHub Pages)
+   - **CNAME** `www → burakozkarabekir.github.io`
+
+3. **Yeni kayıtları EKLE** (Render'ın gösterdiği değerlerle):
    | Type | Name | Value | TTL |
    |------|------|-------|-----|
-   | CNAME | `analiz` | `finansal-analist.onrender.com` | 600 |
-4. Kaydet. DNS yayılması 10 dk – 1 saat. Render SSL sertifikasını otomatik kurar (https).
+   | A | `@` | *(Render'ın verdiği IP)* | 600 |
+   | CNAME | `www` | *(Render'ın verdiği hedef, ör. techwawes.onrender.com)* | 600 |
 
-**Kök alan adı** (`domain.com`, www'siz) istersen: GoDaddy apex'te CNAME desteklemez.
-Render'ın verdiği A kaydı IP'lerini **A record** olarak ekle (Render Custom Domains
-ekranı tam IP'leri ve adımları gösterir), veya kök → `www`/`analiz` yönlendirmesi kur.
+4. Kaydet. Yayılma 10 dk – 1 saat. Render SSL'i otomatik kurar → `https://techwawes.com`.
+
+> **Alternatif (daha kolay):** apex yerine sadece `analiz.techwawes.com` kullan →
+> tek **CNAME** `analiz → techwawes.onrender.com` yeter, A kayıtlarıyla uğraşmazsın.
+> Ama techwawes.com kökünü istiyorsan yukarıdaki adımlar.
+
+### Eski siteyi geri istersen
+Eski TechWawes sitesi `eski-techwawes-yedek` dalında duruyor:
+`git checkout eski-techwawes-yedek` veya GitHub'da o dala bak.
 
 ---
 
