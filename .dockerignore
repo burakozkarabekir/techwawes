@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+backend/breadth.db
+breadth.log
+.git/
+.DS_Store

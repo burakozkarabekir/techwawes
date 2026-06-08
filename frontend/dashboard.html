@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finansal Analist</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0e14; --card: #151a23; --line: #232a36;
+      --txt: #e6e9ef; --mut: #8b94a7; --grn: #26c281; --red: #ff5c5c; --acc: #4c8dff; --amb: #f0a93b;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--txt);
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif; padding: 24px; max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 20px; margin: 0 0 14px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .tab { padding: 10px 16px; cursor: pointer; color: var(--mut); font-size: 14px; font-weight: 600;
+      border-bottom: 2px solid transparent; }
+    .tab.active { color: var(--txt); border-bottom-color: var(--acc); }
+    .panel { display: none; } .panel.active { display: block; }
+    .row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; flex: 1; min-width: 140px; }
+    .card .lbl { color: var(--mut); font-size: 12px; margin-bottom: 6px; }
+    .card .val { font-size: 26px; font-weight: 700; }
+    .up { color: var(--grn); } .down { color: var(--red); } .acc { color: var(--acc); } .amb { color: var(--amb); }
+    .banner { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--acc);
+      border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; font-size: 15px; }
+    button { background: var(--acc); color: #fff; border: 0; border-radius: 9px; padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: wait; }
+    input { background: var(--card); border: 1px solid var(--line); color: var(--txt); border-radius: 9px; padding: 9px 12px; font-size: 14px; width: 160px; text-transform: uppercase; }
+    .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .box h3 { margin: 0 0 12px; font-size: 14px; color: var(--mut); font-weight: 600; }
+    .muted { color: var(--mut); font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--mut); font-weight: 600; cursor: default; }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .scen { border-left: 3px solid var(--line); padding: 10px 14px; margin-bottom: 10px; border-radius: 0 8px 8px 0; background: #10141c; font-size: 14px; line-height: 1.5; }
+    .scen.g { border-left-color: var(--acc); } .scen.i { border-left-color: var(--grn); } .scen.k { border-left-color: var(--red); }
+    .scen b { display: block; margin-bottom: 4px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 12px; padding: 3px 9px; border-radius: 6px; }
+    .tag.p { background: rgba(38,194,129,.15); color: var(--grn); }
+    .tag.n { background: rgba(255,92,92,.15); color: var(--red); }
+    .news a { color: var(--acc); text-decoration: none; }
+    .news li { margin-bottom: 8px; font-size: 13px; }
+    .kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 8px 18px; font-size: 13px; }
+    .kv div span { color: var(--mut); }
+  </style>
+</head>
+<body>
+  <h1>📈 Finansal Analist</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="show('breadth')">Piyasa Gücü</div>
+    <div class="tab" onclick="show('sectors')">Sektörler</div>
+    <div class="tab" onclick="show('company')">Şirket Analizi</div>
+  </div>
+
+  <!-- ============ PIYASA GUCU ============ -->
+  <div class="panel active" id="p-breadth">
+    <div class="muted" style="margin-bottom:14px;">S&amp;P 500 · her kapanışta ≥%4 yükselen / düşen hisse sayısı</div>
+    <div class="banner" id="banner">Veri yükleniyor…</div>
+    <div class="row" id="cards"></div>
+    <div style="margin-bottom:18px;">
+      <button onclick="loadBreadth()">↻ Yenile</button>
+      <span class="muted" id="bstatus" style="margin-left:10px;">Veri her kapanış sonrası otomatik güncellenir.</span>
+    </div>
+    <div class="box"><h3>Günlük: ≥%4 yükselen (yeşil) vs ≥%4 düşen (kırmızı)</h3><canvas id="barChart" height="90"></canvas></div>
+    <div class="box"><h3>Oran (yükselen/düşen) · günlük, 5g, 10g · 1.0 = denge</h3><canvas id="ratioChart" height="90"></canvas></div>
+  </div>
+
+  <!-- ============ SEKTORLER ============ -->
+  <div class="panel" id="p-sectors">
+    <div class="muted" style="margin-bottom:14px;">GICS sektörleri 3 aylık momentuma göre sıralı · "hangi sektör güçlü?"</div>
+    <button onclick="loadSectors()">↻ Yenile</button>
+    <span class="muted" id="sstatus" style="margin-left:10px;">Otomatik güncellenir (6 saatte bir).</span>
+    <div class="box" style="margin-top:16px;">
+      <table id="secTbl"><thead><tr>
+        <th>#</th><th>Sektör</th><th>3A %</th><th>1A %</th><th>Yüksln %</th><th>Liderler</th><th>Yorum</th>
+      </tr></thead><tbody><tr><td colspan="7" class="muted">Yükleniyor…</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- ============ SIRKET ANALIZI ============ -->
+  <div class="panel" id="p-company">
+    <div style="margin-bottom:16px;">
+      <input id="sym" placeholder="AAPL" onkeydown="if(event.key==='Enter')loadCompany()" />
+      <button id="compBtn" onclick="loadCompany()">Analiz Et</button>
+      <span class="muted" id="cstatus" style="margin-left:10px;"></span>
+    </div>
+    <div id="compOut"></div>
+  </div>
+
+<script>
+let barChart, ratioChart, sectorsLoaded=false;
+function show(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('p-'+name).classList.add('active');
+  if(name==='sectors' && !sectorsLoaded){ sectorsLoaded=true; loadSectors(); }
+}
+function num(v){ return v==null?'—':(typeof v==='number'?(Number.isInteger(v)?v:v.toFixed(2)):v); }
+function sign(v){ if(v==null)return '<span class="muted">—</span>'; const c=v>0?'up':(v<0?'down':''); return `<span class="${c}">${v>0?'+':''}${v}</span>`; }
+
+/* ---------- Piyasa Gucu ---------- */
+async function loadBreadth(){ const d=await (await fetch('/api/breadth')).json(); renderBreadth(d); }
+function renderBreadth(d){
+  const h=d.history||[], last=d.latest, b=document.getElementById('banner');
+  if(!last){ b.innerHTML='Henüz veri yok. <b>"Şimdi Tara"</b>.'; return; }
+  b.innerHTML=`<b>${d.yorum}</b> &nbsp;·&nbsp; <span class="muted">${last.date} · 5 günlük oran: <b>${num(last.ratio_5d)}</b></span>`;
+  document.getElementById('cards').innerHTML=`
+    <div class="card"><div class="lbl">↑ ≥%4 Yükselen</div><div class="val up">${num(last.up4)}</div></div>
+    <div class="card"><div class="lbl">↓ ≥%4 Düşen</div><div class="val down">${num(last.down4)}</div></div>
+    <div class="card"><div class="lbl">Günlük Oran</div><div class="val">${num(last.ratio)}</div></div>
+    <div class="card"><div class="lbl">5 Günlük Ort.</div><div class="val acc">${num(last.ratio_5d)}</div></div>
+    <div class="card"><div class="lbl">10 Günlük Ort.</div><div class="val acc">${num(last.ratio_10d)}</div></div>`;
+  const labels=h.map(x=>x.date);
+  if(barChart)barChart.destroy();
+  barChart=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels,datasets:[
+    {label:'↑%4',data:h.map(x=>x.up4),backgroundColor:'#26c281'},
+    {label:'↓%4',data:h.map(x=>-x.down4),backgroundColor:'#ff5c5c'}]},
+    options:{responsive:true,scales:{x:{stacked:true,ticks:{color:'#8b94a7',maxTicksLimit:12}},y:{stacked:true,ticks:{color:'#8b94a7',callback:v=>Math.abs(v)}}},plugins:{legend:{labels:{color:'#e6e9ef'}}}}});
+  if(ratioChart)ratioChart.destroy();
+  ratioChart=new Chart(document.getElementById('ratioChart'),{type:'line',data:{labels,datasets:[
+    {label:'Günlük',data:h.map(x=>x.ratio),borderColor:'#3a4252',borderWidth:1,pointRadius:0},
+    {label:'5g',data:h.map(x=>x.ratio_5d),borderColor:'#4c8dff',borderWidth:2,pointRadius:0},
+    {label:'10g',data:h.map(x=>x.ratio_10d),borderColor:'#f0a93b',borderWidth:2,pointRadius:0}]},
+    options:{responsive:true,scales:{x:{ticks:{color:'#8b94a7',maxTicksLimit:12}},y:{ticks:{color:'#8b94a7'},suggestedMin:0}},plugins:{legend:{labels:{color:'#e6e9ef'}}}}});
+}
+/* ---------- Sektorler ---------- */
+async function loadSectors(){
+  const st=document.getElementById('sstatus');
+  st.textContent='Yükleniyor…';
+  try{
+    const d=await (await fetch('/api/sectors')).json();
+    if(!d.ok)throw new Error(d.error);
+    document.querySelector('#secTbl tbody').innerHTML=d.sectors.map(s=>`<tr>
+      <td>${s.sira}</td><td><b>${s.sector}</b></td>
+      <td>${sign(s.mom_3m)}</td><td>${sign(s.mom_1m)}</td><td>${num(s.yukselen_oran)}</td>
+      <td class="muted">${(s.lider||[]).map(x=>x.symbol).join(', ')}</td>
+      <td class="muted" style="text-align:left">${s.yorum}</td></tr>`).join('');
+    st.textContent='Otomatik güncellenir (6 saatte bir).';
+  }catch(e){ st.textContent='Hata: '+e.message+' (veri hazırlanıyor olabilir, biraz sonra yenileyin)'; }
+}
+
+/* ---------- Sirket Analizi ---------- */
+function stanceColor(s){ if(/Pozitif/.test(s))return 'var(--grn)'; if(/Negatif/.test(s))return 'var(--red)'; return 'var(--amb)'; }
+async function loadCompany(){
+  const sym=document.getElementById('sym').value.trim().toUpperCase();
+  if(!sym)return;
+  const btn=document.getElementById('compBtn'),st=document.getElementById('cstatus'),out=document.getElementById('compOut');
+  btn.disabled=true; st.textContent='Analiz ediliyor…'; out.innerHTML='';
+  try{
+    const r=await fetch('/api/company/'+sym); const a=await r.json();
+    if(!a.ok)throw new Error(a.error||'bulunamadı');
+    st.textContent=''; renderCompany(a);
+  }catch(e){ st.textContent='Hata: '+e.message; } finally{ btn.disabled=false; }
+}
+function renderCompany(a){
+  const t=a.teknik||{}, f=a.temel||{}, L=a.stop_hedef||{}, s=a.senaryolar||{};
+  const out=document.getElementById('compOut');
+  out.innerHTML=`
+    <div class="banner" style="border-left-color:${stanceColor(a.stance)}">
+      <b style="font-size:17px">${a.name} (${a.symbol})</b>
+      <span class="pill" style="background:${stanceColor(a.stance)}22;color:${stanceColor(a.stance)};margin-left:8px">${a.stance} · skor ${a.score>0?'+':''}${a.score}</span>
+      <div class="muted" style="margin-top:4px">${a.sector||''} · ${a.industry||''}</div>
+    </div>
+
+    <div class="box"><h3>Teknik</h3><div class="kv">
+      <div><span>Fiyat:</span> ${num(t.price)}</div>
+      <div><span>RSI:</span> ${num(t.rsi)}</div>
+      <div><span>MA50:</span> ${num(t.ma50)}</div>
+      <div><span>MA200:</span> ${num(t.ma200)}</div>
+      <div><span>1A:</span> ${sign(t.mom_1m)}%</div>
+      <div><span>3A:</span> ${sign(t.mom_3m)}%</div>
+      <div><span>52h konum:</span> ${num(t.pos_52w)}/100</div>
+      <div><span>Destek:</span> ${num(t.support)}</div>
+      <div><span>Direnç:</span> ${num(t.resistance)}</div>
+    </div></div>
+
+    <div class="box"><h3>Temel / Bilanço Özeti</h3><div class="kv">
+      <div><span>F/K:</span> ${num(f.trailing_pe)}</div>
+      <div><span>İleri F/K:</span> ${num(f.forward_pe)}</div>
+      <div><span>PEG:</span> ${num(f.peg)}</div>
+      <div><span>PD/DD:</span> ${num(f.pb)}</div>
+      <div><span>Net Marj:</span> ${num(f.profit_margin)}%</div>
+      <div><span>Ciro Büyüme:</span> ${sign(f.revenue_growth)}%</div>
+      <div><span>Kâr Büyüme:</span> ${sign(f.earnings_growth)}%</div>
+      <div><span>ROE:</span> ${num(f.roe)}%</div>
+      <div><span>Borç/Özkaynak:</span> ${num(f.debt_to_equity)}</div>
+      <div><span>Analist:</span> ${f.recommendation||'—'}</div>
+      <div><span>Hedef:</span> ${num(f.target_price)} (${sign(f.target_upside)}%)</div>
+    </div></div>
+
+    <div class="box"><h3>Sinyaller</h3>
+      <div class="tags">${(a.artilar||[]).map(x=>`<span class="tag p">+ ${x}</span>`).join('')}
+      ${(a.eksiler||[]).map(x=>`<span class="tag n">− ${x}</span>`).join('')}</div>
+    </div>
+
+    <div class="box"><h3>Senaryolar (gerçekçi / iyimser / karamsar)</h3>
+      <div class="scen g"><b class="acc">🎯 GERÇEKÇİ</b>${s.gercekci||''}</div>
+      <div class="scen i"><b class="up">📈 İYİMSER</b>${s.iyimser||''}</div>
+      <div class="scen k"><b class="down">📉 KARAMSAR</b>${s.karamsar||''}</div>
+    </div>
+
+    <div class="box"><h3>Hareketli Stop-Loss / Kâr-Al (Modül 3)</h3>
+      ${L.uygun?`<div class="row">
+        <div class="card"><div class="lbl">Hareketli Stop (${L.stop_mode})</div><div class="val down">${num(L.stop)}</div><div class="muted">${num(L.stop_pct)}%</div></div>
+        <div class="card"><div class="lbl">Kâr-Al 2R</div><div class="val up">${num(L.take_profit_2r)}</div></div>
+        <div class="card"><div class="lbl">Kâr-Al 3R</div><div class="val up">${num(L.take_profit_3r)}</div></div>
+        <div class="card"><div class="lbl">ATR / Hisse Risk</div><div class="val">${num(L.atr)} / ${num(L.risk_per_share)}</div></div>
+      </div><div class="muted">${L.not}</div>`:`<div class="muted">${L.neden||'hesaplanamadı'}</div>`}
+    </div>
+
+    <div class="box news"><h3>Son Haberler</h3><ul>
+      ${(a.haberler||[]).map(n=>`<li>[${n.date}] ${n.url?`<a href="${n.url}" target="_blank">${n.title}</a>`:n.title} <span class="muted">· ${n.source}</span></li>`).join('')||'<span class="muted">haber yok</span>'}
+    </ul></div>
+  `;
+}
+
+loadBreadth();
+</script>
+</body>
+</html>

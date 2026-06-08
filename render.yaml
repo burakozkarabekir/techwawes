@@ -1,0 +1,14 @@
+# Render.com tek-tikla deploy. Repo'yu Render'a baglayinca otomatik okur.
+services:
+  - type: web
+    name: finansal-analist
+    runtime: docker
+    plan: free               # ucretsiz katman (15 dk hareketsizlikte uyur, ilk istekte uyanir)
+    healthCheckPath: /api/status
+    envVars:
+      - key: ADMIN_TOKEN     # /api/refresh icin; Render panelinden gizli deger gir
+        sync: false
+    disk:                    # SQLite gecmisi yeniden baslatmada silinmesin
+      name: data
+      mountPath: /app/backend
+      sizeGB: 1
