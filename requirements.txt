@@ -1,6 +1,9 @@
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 apscheduler==3.11.0
+tzlocal==5.3.1         # apscheduler transitive bagimliligi; eksik kaliyordu.
+                       # 5.4.2 wheel'i bozuk kuruluyor (sadece dist-info, paket yok) -> 5.3.1 pin
+tzdata==2025.1         # python:3.11-slim'de sistem tz veritabani yok; zoneinfo icin sart
 yfinance>=1.4.1
 curl_cffi>=0.7
 pandas==2.2.3
