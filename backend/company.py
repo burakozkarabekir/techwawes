@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 
 import yfinance as yf
 
-from . import indicators
+from . import indicators, markets
 
 # Sembol basina analiz onbellegi (public'te tekrar eden istekleri Yahoo'ya tasimaz)
 _ANALYSIS_CACHE: dict[str, tuple[float, dict]] = {}
@@ -34,6 +34,7 @@ def _fundamentals(info: dict) -> dict:
         "sector": info.get("sector"),
         "industry": info.get("industry"),
         "name": info.get("shortName") or info.get("longName"),
+        "currency": info.get("currency"),
         "market_cap": info.get("marketCap"),
         "trailing_pe": _r(info.get("trailingPE")),
         "forward_pe": _r(info.get("forwardPE")),
@@ -270,9 +271,21 @@ def levels(tech: dict, score: int) -> dict:
 
 
 # ----------------------------------------------------------------------------- ust seviye API
+def normalize_symbol(symbol: str) -> str:
+    """Kullanici sembolunu Yahoo formatina cevirir.
+
+    BIST hisseleri Yahoo'da `.IS` ister (THYAO -> THYAO.IS). Kullanici cipla yazarsa
+    ve sembol bilinen BIST evrenindeyse `.IS` eklenir. Zaten suffix varsa dokunulmaz.
+    """
+    s = symbol.upper().strip()
+    if "." not in s and s in markets.BIST_BARE_SET:
+        return s + markets.BIST_SUFFIX
+    return s
+
+
 def analyze(symbol: str) -> dict:
     """Bir hisse icin tam analiz: teknik + temel + haber + 3 senaryo + stop/hedef."""
-    symbol = symbol.upper().strip()
+    symbol = normalize_symbol(symbol)
     t = yf.Ticker(symbol)
     try:
         hist = t.history(period="1y", interval="1d", auto_adjust=True)
@@ -312,7 +325,7 @@ def analyze(symbol: str) -> dict:
 
 def analyze_cached(symbol: str) -> dict:
     """analyze() etrafinda TTL'li onbellek. Public endpoint bunu kullanir."""
-    symbol = symbol.upper().strip()
+    symbol = normalize_symbol(symbol)
     now = time.time()
     hit = _ANALYSIS_CACHE.get(symbol)
     if hit and now - hit[0] < _ANALYSIS_TTL:

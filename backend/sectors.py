@@ -15,9 +15,10 @@ import time
 import pandas as pd
 import yfinance as yf
 
-from . import breadth
+from . import markets
 
-_CACHE: dict = {"ts": 0.0, "data": None}
+# Piyasa basina cache: {market: {"ts": float, "data": list|None}}
+_CACHE: dict[str, dict] = {}
 _TTL = 1800  # 30 dk
 
 
@@ -38,13 +39,23 @@ def _ret(close: pd.Series, days: int) -> float | None:
     return float(now / then - 1) * 100
 
 
-def rank_sectors(period: str = "6mo") -> list[dict]:
-    """Her sektor icin 1a/3a ortalama getiri + yukselen oranini hesaplar, siralar."""
-    now = time.time()
-    if _CACHE["data"] is not None and now - _CACHE["ts"] < _TTL:
-        return _CACHE["data"]
+def invalidate(market: str | None = None) -> None:
+    """Cache'i bayatlatir. market=None -> tum piyasalar."""
+    if market is None:
+        _CACHE.clear()
+    else:
+        _CACHE.pop(markets.normalize_market(market), None)
 
-    table = breadth.get_sp500_table()
+
+def rank_sectors(period: str = "6mo", market: str = "us") -> list[dict]:
+    """Her sektor icin 1a/3a ortalama getiri + yukselen oranini hesaplar, siralar."""
+    market = markets.normalize_market(market)
+    now = time.time()
+    cached = _CACHE.get(market)
+    if cached and cached["data"] is not None and now - cached["ts"] < _TTL:
+        return cached["data"]
+
+    table = markets.get_table(market)
     symbols = table["symbol"].tolist()
     sector_of = dict(zip(table["symbol"], table["sector"]))
 
@@ -83,7 +94,7 @@ def rank_sectors(period: str = "6mo") -> list[dict]:
         row["sira"] = i
         row["yorum"] = _sector_comment(row)
 
-    _CACHE.update(ts=now, data=out)
+    _CACHE[market] = {"ts": now, "data": out}
     return out
 
 
@@ -112,7 +123,9 @@ def _n(v) -> str:
 
 
 if __name__ == "__main__":
-    data = rank_sectors()
+    import sys as _sys
+    mkt = _sys.argv[1] if len(_sys.argv) > 1 else "us"
+    data = rank_sectors(market=mkt)
     print(f"\n{'SIRA':<5}{'SEKTOR':<26}{'3A %':>8}{'1A %':>8}{'YUKS%':>8}  YORUM")
     print("-" * 90)
     for r in data:

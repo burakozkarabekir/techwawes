@@ -26,6 +26,8 @@ from urllib.request import Request, urlopen
 import pandas as pd
 import yfinance as yf
 
+from . import markets
+
 DB_PATH = Path(__file__).parent / "breadth.db"
 THRESHOLD = 4.0  # yuzde esigi
 
@@ -130,23 +132,66 @@ def compute_breadth(tickers: list[str], period: str = "3mo") -> pd.DataFrame:
     return df
 
 
-def save_history(df: pd.DataFrame, db_path: Path = DB_PATH) -> None:
-    """Gecmisi SQLite'a yazar (UPSERT). Ayni gun tekrar calistirilirsa guncellenir."""
-    conn = sqlite3.connect(db_path)
-    try:
+_NEW_SCHEMA = """
+    CREATE TABLE IF NOT EXISTS breadth (
+        date TEXT NOT NULL,
+        market TEXT NOT NULL DEFAULT 'us',
+        up4 INTEGER, down4 INTEGER, total INTEGER, ratio REAL,
+        up4_5d REAL, down4_5d REAL, ratio_5d REAL,
+        up4_10d REAL, down4_10d REAL, ratio_10d REAL,
+        PRIMARY KEY (date, market)
+    )
+"""
+
+
+def _ensure_schema(conn: sqlite3.Connection) -> None:
+    """Tabloyu olusturur; eski (market kolonsuz) semayi gocurur. Idempotent.
+
+    v1 sema: PRIMARY KEY(date) — tek piyasa (ABD). Cok-piyasa icin (date, market)
+    bilesik anahtara gecilir; eski satirlar market='us' ile tasinir. Gocum ayni
+    transaction'da commit edilir (yarim kalmis gocum birakmaz).
+    """
+    conn.execute(_NEW_SCHEMA)
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(breadth)")}
+    migrated = False
+
+    if "market" not in cols:
+        # Eski v1 tablo: market kolonu yok. Gecici tabloya tasi, yeni semayi kur.
+        conn.execute("ALTER TABLE breadth RENAME TO breadth_legacy")
+        conn.execute(_NEW_SCHEMA)
+        migrated = True
+
+    # Legacy tablo varsa (taze gocum ya da onceden yarim kalmis gocum) veriyi tasi.
+    has_legacy = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='breadth_legacy'"
+    ).fetchone()
+    if has_legacy:
         conn.execute(
             """
-            CREATE TABLE IF NOT EXISTS breadth (
-                date TEXT PRIMARY KEY,
-                up4 INTEGER, down4 INTEGER, total INTEGER, ratio REAL,
-                up4_5d REAL, down4_5d REAL, ratio_5d REAL,
-                up4_10d REAL, down4_10d REAL, ratio_10d REAL
-            )
+            INSERT OR IGNORE INTO breadth
+                (date, market, up4, down4, total, ratio,
+                 up4_5d, down4_5d, ratio_5d, up4_10d, down4_10d, ratio_10d)
+            SELECT date, 'us', up4, down4, total, ratio,
+                   up4_5d, down4_5d, ratio_5d, up4_10d, down4_10d, ratio_10d
+            FROM breadth_legacy
             """
         )
+        conn.execute("DROP TABLE breadth_legacy")
+        migrated = True
+
+    if migrated:
+        conn.commit()
+
+
+def save_history(df: pd.DataFrame, market: str = "us", db_path: Path = DB_PATH) -> None:
+    """Gecmisi SQLite'a yazar (UPSERT). Ayni gun+piyasa tekrar calistirilirsa guncellenir."""
+    market = markets.normalize_market(market)
+    conn = sqlite3.connect(db_path)
+    try:
+        _ensure_schema(conn)
         rows = [
             (
-                str(d), int(r.up4), int(r.down4), int(r.total),
+                str(d), market, int(r.up4), int(r.down4), int(r.total),
                 _f(r.ratio), _f(r.up4_5d), _f(r.down4_5d), _f(r.ratio_5d),
                 _f(r.up4_10d), _f(r.down4_10d), _f(r.ratio_10d),
             )
@@ -154,8 +199,8 @@ def save_history(df: pd.DataFrame, db_path: Path = DB_PATH) -> None:
         ]
         conn.executemany(
             """
-            INSERT INTO breadth VALUES (?,?,?,?,?,?,?,?,?,?,?)
-            ON CONFLICT(date) DO UPDATE SET
+            INSERT INTO breadth VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(date, market) DO UPDATE SET
                 up4=excluded.up4, down4=excluded.down4, total=excluded.total, ratio=excluded.ratio,
                 up4_5d=excluded.up4_5d, down4_5d=excluded.down4_5d, ratio_5d=excluded.ratio_5d,
                 up4_10d=excluded.up4_10d, down4_10d=excluded.down4_10d, ratio_10d=excluded.ratio_10d
@@ -167,14 +212,18 @@ def save_history(df: pd.DataFrame, db_path: Path = DB_PATH) -> None:
         conn.close()
 
 
-def load_history(db_path: Path = DB_PATH) -> list[dict]:
-    """Kayitli gecmisi tarih sirali liste olarak doner (dashboard icin)."""
+def load_history(market: str = "us", db_path: Path = DB_PATH) -> list[dict]:
+    """Bir piyasanin kayitli gecmisini tarih sirali liste olarak doner (dashboard icin)."""
     if not db_path.exists():
         return []
+    market = markets.normalize_market(market)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     try:
-        cur = conn.execute("SELECT * FROM breadth ORDER BY date ASC")
+        _ensure_schema(conn)
+        cur = conn.execute(
+            "SELECT * FROM breadth WHERE market = ? ORDER BY date ASC", (market,)
+        )
         return [dict(row) for row in cur.fetchall()]
     finally:
         conn.close()
@@ -205,13 +254,15 @@ def signal(ratio_5d: float | None) -> str:
     return "GUCLU SATICILI - genis tabanli dusus"
 
 
-def run(period: str = "3mo") -> dict:
-    tickers = get_sp500_tickers()
+def run(period: str = "3mo", market: str = "us") -> dict:
+    market = markets.normalize_market(market)
+    tickers = markets.get_table(market)["symbol"].tolist()
     df = compute_breadth(tickers, period=period)
-    save_history(df)
+    save_history(df, market=market)
     last = df.iloc[-1]
     summary = {
         "date": str(df.index[-1]),
+        "market": market,
         "evren": len(tickers),
         "veri_olan": int(last.total),
         "up4": int(last.up4),
@@ -225,15 +276,17 @@ def run(period: str = "3mo") -> dict:
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="S&P 500 Piyasa Gucu (Market Breadth) tarayici")
+    ap = argparse.ArgumentParser(description="Piyasa Gucu (Market Breadth) tarayici")
     ap.add_argument("--period", default="3mo", help="yfinance period (orn: 1mo, 3mo, 6mo, 1y)")
+    ap.add_argument("--market", default="us", choices=list(markets.MARKETS), help="piyasa: us | bist")
     args = ap.parse_args()
 
-    s = run(period=args.period)
+    s = run(period=args.period, market=args.market)
+    evren_label = markets.MARKETS[s["market"]]["evren_label"]
     print("\n" + "=" * 48)
-    print(f"  PIYASA GUCU  -  {s['date']}")
+    print(f"  PIYASA GUCU ({evren_label})  -  {s['date']}")
     print("=" * 48)
-    print(f"  Evren (S&P 500)          : {s['evren']} hisse")
+    print(f"  Evren ({evren_label})          : {s['evren']} hisse")
     print(f"  O gun verisi olan        : {s['veri_olan']} hisse")
     print(f"  >= +%4 yukselen          : {s['up4']}")
     print(f"  <= -%4 dusen             : {s['down4']}")

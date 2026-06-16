@@ -48,19 +48,31 @@
     .news li { margin-bottom: 8px; font-size: 13px; }
     .kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 8px 18px; font-size: 13px; }
     .kv div span { color: var(--mut); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+    .mkt { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
+    .mkt button { background: transparent; color: var(--mut); padding: 7px 14px; font-size: 13px; border-radius: 8px; }
+    .mkt button.active { background: var(--acc); color: #fff; }
   </style>
 </head>
 <body>
-  <h1>📈 Finansal Analist</h1>
+  <div class="topbar">
+    <h1 style="margin:0">📈 Finansal Analist</h1>
+    <div class="mkt" id="mkt">
+      <button data-mkt="us" class="active" onclick="setMarket('us')">🇺🇸 ABD</button>
+      <button data-mkt="bist" onclick="setMarket('bist')">🇹🇷 BIST</button>
+    </div>
+  </div>
   <div class="tabs">
     <div class="tab active" onclick="show('breadth')">Piyasa Gücü</div>
     <div class="tab" onclick="show('sectors')">Sektörler</div>
+    <div class="tab" onclick="show('scan')">Tarama</div>
+    <div class="tab" onclick="show('rs')">Güç (RS)</div>
     <div class="tab" onclick="show('company')">Şirket Analizi</div>
   </div>
 
   <!-- ============ PIYASA GUCU ============ -->
   <div class="panel active" id="p-breadth">
-    <div class="muted" style="margin-bottom:14px;">S&amp;P 500 · her kapanışta ≥%4 yükselen / düşen hisse sayısı</div>
+    <div class="muted" id="breadthSub" style="margin-bottom:14px;">S&amp;P 500 · her kapanışta ≥%4 yükselen / düşen hisse sayısı</div>
     <div class="banner" id="banner">Veri yükleniyor…</div>
     <div class="row" id="cards"></div>
     <div style="margin-bottom:18px;">
@@ -73,13 +85,59 @@
 
   <!-- ============ SEKTORLER ============ -->
   <div class="panel" id="p-sectors">
-    <div class="muted" style="margin-bottom:14px;">GICS sektörleri 3 aylık momentuma göre sıralı · "hangi sektör güçlü?"</div>
+    <div class="muted" id="sectorSub" style="margin-bottom:14px;">GICS sektörleri 3 aylık momentuma göre sıralı · "hangi sektör güçlü?"</div>
     <button onclick="loadSectors()">↻ Yenile</button>
     <span class="muted" id="sstatus" style="margin-left:10px;">Otomatik güncellenir (6 saatte bir).</span>
     <div class="box" style="margin-top:16px;">
       <table id="secTbl"><thead><tr>
         <th>#</th><th>Sektör</th><th>3A %</th><th>1A %</th><th>Yüksln %</th><th>Liderler</th><th>Yorum</th>
       </tr></thead><tbody><tr><td colspan="7" class="muted">Yükleniyor…</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- ============ TARAMA (Asama 4) ============ -->
+  <div class="panel" id="p-scan">
+    <div class="muted" style="margin-bottom:14px;">Birikim taraması (fiyat yatay + hacim artan) ve Golden/Death Cross sinyalleri</div>
+    <button onclick="loadScan(true)">↻ Yenile</button>
+    <span class="muted" id="scstatus" style="margin-left:10px;"></span>
+    <div class="box" style="margin-top:16px;"><h3>📥 Birikim (sessiz toplama olası)</h3>
+      <table id="accTbl"><thead><tr><th>Sembol</th><th>Sektör</th><th>Fiyat</th><th>Hacim ×</th><th>Bant %</th><th>Açıklama</th></tr></thead>
+      <tbody><tr><td colspan="6" class="muted">—</td></tr></tbody></table>
+    </div>
+    <div class="box"><h3>✚ Golden / Death Cross (MA50 × MA200)</h3>
+      <table id="crossTbl"><thead><tr><th>Sembol</th><th>Sektör</th><th>Sinyal</th><th>Tarih</th><th>Fiyat</th><th>MA50/MA200</th></tr></thead>
+      <tbody><tr><td colspan="6" class="muted">—</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- ============ GUC / RS (Asama 6) ============ -->
+  <div class="panel" id="p-rs">
+    <div class="muted" style="margin-bottom:14px;">RS Rating (1–99 yüzdelik göreli güç), top-down güç seçimi, oran grafiği ve karşılaştırma</div>
+    <button onclick="loadRs(true)">↻ Yenile</button>
+    <span class="muted" id="rsstatus" style="margin-left:10px;"></span>
+    <div class="banner" id="topdownBanner" style="margin-top:14px;">Top-down seçim yükleniyor…</div>
+
+    <div class="box"><h3>📊 Oran Grafiği — hisse / benchmark</h3>
+      <div style="margin-bottom:10px;">
+        <input id="ratioSym" placeholder="NVDA" onkeydown="if(event.key==='Enter')loadRatio()" />
+        <button onclick="loadRatio()">Çiz</button>
+        <span class="muted" id="ratioStatus" style="margin-left:8px;"></span>
+      </div>
+      <canvas id="ratioCanvas" height="80"></canvas>
+    </div>
+
+    <div class="box"><h3>⚖️ Karşılaştırma (virgülle 2+ sembol)</h3>
+      <div style="margin-bottom:10px;">
+        <input id="cmpSyms" style="width:260px" placeholder="AAPL, MSFT, NVDA" onkeydown="if(event.key==='Enter')loadCompare()" />
+        <button onclick="loadCompare()">Karşılaştır</button>
+        <span class="muted" id="cmpStatus" style="margin-left:8px;"></span>
+      </div>
+      <div id="cmpOut"></div>
+    </div>
+
+    <div class="box"><h3>🏆 RS Rating tablosu (en güçlü ilk 30)</h3>
+      <table id="rsTbl"><thead><tr><th>#</th><th>Sembol</th><th>Sektör</th><th>RS</th><th>Ağırlıklı getiri %</th></tr></thead>
+      <tbody><tr><td colspan="5" class="muted">—</td></tr></tbody></table>
     </div>
   </div>
 
@@ -91,22 +149,50 @@
       <span class="muted" id="cstatus" style="margin-left:10px;"></span>
     </div>
     <div id="compOut"></div>
+    <div id="healthOut"></div>
+    <div id="chartOut"></div>
+    <div id="newsOut"></div>
   </div>
 
 <script>
-let barChart, ratioChart, sectorsLoaded=false;
+let barChart, ratioChart, ratioCmpChart, priceChart, sectorsLoaded=false, scanLoaded=false, rsLoaded=false, currentMarket='us', activePanel='breadth';
+const MKT={
+  us:{breadthSub:'S&P 500 · her kapanışta ≥%4 yükselen / düşen hisse sayısı',
+      sectorSub:'GICS sektörleri 3 aylık momentuma göre sıralı · "hangi sektör güçlü?"',
+      ornek:'AAPL'},
+  bist:{breadthSub:'BIST ~100 · her kapanışta ≥%4 yükselen / düşen hisse sayısı',
+        sectorSub:'BIST sektörleri 3 aylık momentuma göre sıralı · "hangi sektör güçlü?"',
+        ornek:'THYAO'}
+};
+function setMarket(m){
+  if(m===currentMarket)return;
+  currentMarket=m;
+  document.querySelectorAll('#mkt button').forEach(b=>b.classList.toggle('active', b.dataset.mkt===m));
+  document.getElementById('breadthSub').textContent=MKT[m].breadthSub;
+  document.getElementById('sectorSub').textContent=MKT[m].sectorSub;
+  document.getElementById('sym').placeholder=MKT[m].ornek;
+  // Aktif paneli yeni piyasayla yeniden yükle; piyasaya bağlı cache'leri sıfırla
+  sectorsLoaded=false; scanLoaded=false; rsLoaded=false;
+  loadBreadth();
+  if(activePanel==='sectors'){ sectorsLoaded=true; loadSectors(); }
+  if(activePanel==='scan'){ scanLoaded=true; loadScan(); }
+  if(activePanel==='rs'){ rsLoaded=true; loadRs(); }
+}
 function show(name){
+  activePanel=name;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('p-'+name).classList.add('active');
   if(name==='sectors' && !sectorsLoaded){ sectorsLoaded=true; loadSectors(); }
+  if(name==='scan' && !scanLoaded){ scanLoaded=true; loadScan(); }
+  if(name==='rs' && !rsLoaded){ rsLoaded=true; loadRs(); }
 }
 function num(v){ return v==null?'—':(typeof v==='number'?(Number.isInteger(v)?v:v.toFixed(2)):v); }
 function sign(v){ if(v==null)return '<span class="muted">—</span>'; const c=v>0?'up':(v<0?'down':''); return `<span class="${c}">${v>0?'+':''}${v}</span>`; }
 
 /* ---------- Piyasa Gucu ---------- */
-async function loadBreadth(){ const d=await (await fetch('/api/breadth')).json(); renderBreadth(d); }
+async function loadBreadth(){ const d=await (await fetch('/api/breadth?market='+currentMarket)).json(); renderBreadth(d); }
 function renderBreadth(d){
   const h=d.history||[], last=d.latest, b=document.getElementById('banner');
   if(!last){ b.innerHTML='Henüz veri yok. <b>"Şimdi Tara"</b>.'; return; }
@@ -135,7 +221,7 @@ async function loadSectors(){
   const st=document.getElementById('sstatus');
   st.textContent='Yükleniyor…';
   try{
-    const d=await (await fetch('/api/sectors')).json();
+    const d=await (await fetch('/api/sectors?market='+currentMarket)).json();
     if(!d.ok)throw new Error(d.error);
     document.querySelector('#secTbl tbody').innerHTML=d.sectors.map(s=>`<tr>
       <td>${s.sira}</td><td><b>${s.sector}</b></td>
@@ -152,15 +238,176 @@ async function loadCompany(){
   const sym=document.getElementById('sym').value.trim().toUpperCase();
   if(!sym)return;
   const btn=document.getElementById('compBtn'),st=document.getElementById('cstatus'),out=document.getElementById('compOut');
-  btn.disabled=true; st.textContent='Analiz ediliyor…'; out.innerHTML='';
+  btn.disabled=true; st.textContent='Analiz ediliyor…';
+  out.innerHTML=''; document.getElementById('healthOut').innerHTML=''; document.getElementById('chartOut').innerHTML=''; document.getElementById('newsOut').innerHTML='';
   try{
     const r=await fetch('/api/company/'+sym); const a=await r.json();
     if(!a.ok)throw new Error(a.error||'bulunamadı');
     st.textContent=''; renderCompany(a);
+    // Şirket için diğer modülleri paralel yükle (Aşama 2 sağlık, 5 grafik, 3 haber)
+    loadHealth(sym); loadChart(sym); loadNews(sym);
   }catch(e){ st.textContent='Hata: '+e.message; } finally{ btn.disabled=false; }
+}
+
+/* ---------- Asama 2: Temel Saglik Skoru ---------- */
+async function loadHealth(sym){
+  const el=document.getElementById('healthOut');
+  el.innerHTML='<div class="box"><h3>Temel Sağlık Skoru (Modül 2)</h3><span class="muted">hesaplanıyor…</span></div>';
+  try{
+    const a=await (await fetch('/api/health/'+sym)).json();
+    if(!a.ok){ el.innerHTML=`<div class="box"><h3>Temel Sağlık Skoru</h3><span class="muted">${a.error||'veri yok'}</span></div>`; return; }
+    const rf=a.red_flag||{};
+    el.innerHTML=`<div class="box"><h3>Temel Sağlık Skoru — ${a.skor} · ${a.ozet} <span class="muted">(${a.donem_tipi}, ${a.currency||''})</span></h3>
+      <table><thead><tr><th>Kriter</th><th>Durum</th><th>Ham değer</th><th>Not</th></tr></thead><tbody>
+      ${(a.criteria||[]).map(c=>`<tr>
+        <td>${c.label}</td>
+        <td>${c.passed===true?'<span class="up">✓ geçti</span>':(c.passed===false?'<span class="down">✗ kaldı</span>':'<span class="muted">— veri yok</span>')}</td>
+        <td>${c.raw==null?'—':c.raw}</td>
+        <td class="muted" style="text-align:left">${c.detail}</td></tr>`).join('')}
+      </tbody></table>
+      <div class="banner" style="margin-top:14px;border-left-color:${rf.flag?'var(--red)':'var(--line)'}">
+        <b>${rf.flag?'⚠️ Kırmızı Bayrak':'Kırmızı bayrak yok'}</b>
+        <div class="muted" style="margin-top:4px">${rf.reason||''}</div>
+        ${rf.kalemler?`<div class="muted" style="margin-top:6px">Sermaye artırımı: ${fmtBig(rf.kalemler.sermaye_artirimi)} · Borç ödeme: ${fmtBig(rf.kalemler.borc_odeme)} · Op. nakit: ${fmtBig(rf.kalemler.operasyonel_nakit)} · Capex: ${fmtBig(rf.kalemler.yatirim_capex)}</div>`:''}
+      </div></div>`;
+  }catch(e){ el.innerHTML=`<div class="box"><h3>Temel Sağlık Skoru</h3><span class="muted">Hata: ${e.message}</span></div>`; }
+}
+function fmtBig(v){ if(v==null)return '—'; const a=Math.abs(v); if(a>=1e9)return (v/1e9).toFixed(2)+'B'; if(a>=1e6)return (v/1e6).toFixed(1)+'M'; if(a>=1e3)return (v/1e3).toFixed(0)+'K'; return ''+Math.round(v); }
+
+/* ---------- Asama 5: Fiyat grafigi + iceriden islem / geri alim isaretleri ---------- */
+async function loadChart(sym){
+  const el=document.getElementById('chartOut');
+  el.innerHTML='<div class="box"><h3>Fiyat Grafiği & İşaretler (Modül 5)</h3><span class="muted">yükleniyor…</span></div>';
+  try{
+    const c=await (await fetch('/api/chart/'+sym)).json();
+    if(!c.ok){ el.innerHTML=`<div class="box"><h3>Fiyat Grafiği</h3><span class="muted">${c.error||'veri yok'}</span></div>`; return; }
+    el.innerHTML=`<div class="box"><h3>Fiyat Grafiği & İşaretler — ${c.symbol} <span class="muted">${c.currency||''}</span></h3>
+      ${c.note?`<div class="muted" style="margin-bottom:8px">ℹ️ ${c.note}</div>`:''}
+      <div class="muted" style="margin-bottom:6px">🟢 içeriden alım · 🔴 içeriden satım · 🔵 geri alım · çizgiler: fiyat / MA50 / MA200</div>
+      <canvas id="priceCanvas" height="90"></canvas>
+      <div class="muted" style="margin-top:6px">İçeriden işlem: ${c.insider.length} · Geri alım işareti: ${c.buyback.length}</div></div>`;
+    drawPriceChart(c);
+  }catch(e){ el.innerHTML=`<div class="box"><h3>Fiyat Grafiği</h3><span class="muted">Hata: ${e.message}</span></div>`; }
+}
+function alignMarkers(dates, markers){
+  // Her marker'ı en yakın tarih index'ine hizala; dates uzunluğunda dizi + index->marker haritası
+  const arr=new Array(dates.length).fill(null), map={};
+  markers.forEach(m=>{
+    let idx=dates.indexOf(m.date);
+    if(idx<0){ for(let i=0;i<dates.length;i++){ if(dates[i]>=m.date){ idx=i; break; } } }
+    if(idx>=0){ map[idx]=m; }
+  });
+  return {map};
+}
+function drawPriceChart(c){
+  const dates=c.dates;
+  const mk=(markers,color,label)=>{
+    const {map}=alignMarkers(dates,markers);
+    const data=dates.map((_,i)=>map[i]?c.close[i]:null);
+    return {type:'line',label,data,backgroundColor:color,borderColor:color,
+      pointRadius:data.map(v=>v==null?0:5),pointHoverRadius:7,showLine:false,_map:map};
+  };
+  if(priceChart)priceChart.destroy();
+  priceChart=new Chart(document.getElementById('priceCanvas'),{
+    data:{labels:dates,datasets:[
+      {type:'line',label:'Fiyat',data:c.close,borderColor:'#4c8dff',borderWidth:1.5,pointRadius:0,tension:.1},
+      {type:'line',label:'MA50',data:c.ma50,borderColor:'#f0a93b',borderWidth:1,pointRadius:0},
+      {type:'line',label:'MA200',data:c.ma200,borderColor:'#8b94a7',borderWidth:1,pointRadius:0},
+      mk((c.insider||[]).filter(m=>m.type==='al'),'#26c281','İçeriden alım'),
+      mk((c.insider||[]).filter(m=>m.type==='sat'),'#ff5c5c','İçeriden satım'),
+      mk(c.buyback||[],'#4c8dff','Geri alım'),
+    ]},
+    options:{responsive:true,interaction:{mode:'nearest',intersect:true},
+      scales:{x:{ticks:{color:'#8b94a7',maxTicksLimit:12}},y:{ticks:{color:'#8b94a7'}}},
+      plugins:{legend:{labels:{color:'#e6e9ef'}},
+        tooltip:{callbacks:{label:ctx=>{
+          const m=ctx.dataset._map&&ctx.dataset._map[ctx.dataIndex];
+          if(!m)return ctx.dataset.label+': '+num(ctx.parsed.y);
+          if(m.insider!==undefined)return `${(m.type||'').toUpperCase()} · ${m.insider} (${m.position}) · ${m.shares?num(m.shares)+' adet':''}`;
+          return 'Geri alım: '+(m.text||'');}}}}}});
+}
+
+/* ---------- Asama 3: Haber akisi ---------- */
+async function loadNews(sym){
+  const el=document.getElementById('newsOut');
+  el.innerHTML='<div class="box news"><h3>Haber Akışı (Modül 3)</h3><span class="muted">yükleniyor…</span></div>';
+  try{
+    const d=await (await fetch('/api/news/'+sym)).json();
+    const items=d.news||[];
+    el.innerHTML=`<div class="box news"><h3>Haber Akışı (Modül 3) — ${items.length} haber</h3><ul>
+      ${items.map(n=>`<li>[${n.date||'—'}] ${n.url?`<a href="${n.url}" target="_blank">${n.title}</a>`:n.title} <span class="muted">· ${n.source||''}</span>${n.summary?`<div class="muted">${n.summary}</div>`:''}</li>`).join('')||'<span class="muted">haber yok</span>'}
+    </ul></div>`;
+  }catch(e){ el.innerHTML=`<div class="box news"><h3>Haber Akışı</h3><span class="muted">Hata: ${e.message}</span></div>`; }
+}
+
+/* ---------- Asama 4: Tarama ---------- */
+async function loadScan(force){
+  const st=document.getElementById('scstatus'); st.textContent='Taranıyor… (tüm evren indiriliyor, biraz sürebilir)';
+  try{
+    const d=await (await fetch('/api/scan?market='+currentMarket)).json();
+    if(!d.ok)throw new Error(d.error);
+    document.querySelector('#accTbl tbody').innerHTML=(d.accumulation||[]).map(a=>`<tr>
+      <td><b>${a.symbol}</b></td><td class="muted">${a.sector||''}</td><td>${num(a.price)}</td>
+      <td class="up">${a.vol_ratio}×</td><td>${a.range_pct}</td>
+      <td class="muted" style="text-align:left">${a.detail}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Birikim sinyali bulunamadı.</td></tr>';
+    document.querySelector('#crossTbl tbody').innerHTML=(d.crosses||[]).map(c=>`<tr>
+      <td><b>${c.symbol}</b></td><td class="muted">${c.sector||''}</td>
+      <td><span class="${c.signal==='golden'?'up':'down'}">${c.signal==='golden'?'Golden ✚':'Death ✚'}</span></td>
+      <td>${c.date}</td><td>${num(c.price)}</td><td class="muted">${num(c.ma50)} / ${num(c.ma200)}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Yakın cross sinyali yok.</td></tr>';
+    st.textContent=`Evren: ${d.evren} hisse · otomatik 30 dk cache`;
+  }catch(e){ st.textContent='Hata: '+e.message; }
+}
+
+/* ---------- Asama 6: Guc / RS ---------- */
+async function loadRs(force){
+  const st=document.getElementById('rsstatus'); st.textContent='RS hesaplanıyor… (tüm evren indiriliyor)';
+  // top-down
+  try{
+    const td=await (await fetch('/api/rs/topdown?market='+currentMarket)).json();
+    const b=document.getElementById('topdownBanner');
+    b.innerHTML = td.ok&&td.pick ? `<b>🏆 Top-down seçim:</b> ${td.pick.aciklama}` : 'Top-down seçim hesaplanamadı.';
+  }catch(e){}
+  try{
+    const d=await (await fetch('/api/rs?market='+currentMarket)).json();
+    if(!d.ok)throw new Error(d.error);
+    document.querySelector('#rsTbl tbody').innerHTML=(d.rows||[]).slice(0,30).map((r,i)=>`<tr>
+      <td>${i+1}</td><td><b>${r.symbol}</b></td><td class="muted">${r.sector||''}</td>
+      <td><span class="${r.rs>=80?'up':(r.rs<=20?'down':'')}">${r.rs}</span></td><td>${sign(r.raw)}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">veri yok</td></tr>';
+    st.textContent=`Evren: ${d.evren} hisse · RS 1–99 yüzdelik`;
+  }catch(e){ st.textContent='Hata: '+e.message; }
+}
+async function loadRatio(){
+  const sym=(document.getElementById('ratioSym').value.trim()||MKT[currentMarket].ornek).toUpperCase();
+  const st=document.getElementById('ratioStatus'); st.textContent='çiziliyor…';
+  try{
+    const d=await (await fetch('/api/ratio/'+sym+'?market='+currentMarket)).json();
+    if(!d.ok)throw new Error(d.error);
+    st.innerHTML=`<span class="${d.trend==='guclu'?'up':(d.trend==='zayif'?'down':'')}">${d.yorum}</span>`;
+    if(ratioCmpChart)ratioCmpChart.destroy();
+    ratioCmpChart=new Chart(document.getElementById('ratioCanvas'),{type:'line',
+      data:{labels:d.dates,datasets:[{label:d.symbol+' / '+d.benchmark+' (başl.=100)',data:d.ratio,borderColor:'#4c8dff',borderWidth:2,pointRadius:0,tension:.1}]},
+      options:{responsive:true,scales:{x:{ticks:{color:'#8b94a7',maxTicksLimit:12}},y:{ticks:{color:'#8b94a7'}}},plugins:{legend:{labels:{color:'#e6e9ef'}}}}});
+  }catch(e){ st.textContent='Hata: '+e.message; }
+}
+async function loadCompare(){
+  const v=document.getElementById('cmpSyms').value.trim(); if(!v)return;
+  const st=document.getElementById('cmpStatus'),out=document.getElementById('cmpOut');
+  st.textContent='karşılaştırılıyor…';
+  try{
+    const d=await (await fetch('/api/compare?symbols='+encodeURIComponent(v))).json();
+    if(!d.ok)throw new Error(d.error);
+    const rows=d.rows.filter(r=>r.ok);
+    if(!rows.length){ out.innerHTML='<span class="muted">geçerli sembol yok</span>'; st.textContent=''; return; }
+    const F=[['Duruş','stance'],['Skor','score'],['Fiyat','price'],['RSI','rsi'],['3A %','mom_3m'],['52h','pos_52w'],['F/K','pe'],['PEG','peg'],['PD/DD','pb'],['ROE %','roe'],['Marj %','margin'],['Hedef %','target_upside']];
+    out.innerHTML=`<table><thead><tr><th>Metrik</th>${rows.map(r=>`<th>${r.symbol}</th>`).join('')}</tr></thead><tbody>
+      ${F.map(([lbl,k])=>`<tr><td style="text-align:left">${lbl}</td>${rows.map(r=>`<td>${['mom_3m','target_upside'].includes(k)?sign(r[k]):num(r[k])}</td>`).join('')}</tr>`).join('')}
+    </tbody></table>`;
+    st.textContent='';
+  }catch(e){ st.textContent='Hata: '+e.message; }
 }
 function renderCompany(a){
   const t=a.teknik||{}, f=a.temel||{}, L=a.stop_hedef||{}, s=a.senaryolar||{};
+  const cur=f.currency?(' '+f.currency):'';
   const out=document.getElementById('compOut');
   out.innerHTML=`
     <div class="banner" style="border-left-color:${stanceColor(a.stance)}">
@@ -170,7 +417,7 @@ function renderCompany(a){
     </div>
 
     <div class="box"><h3>Teknik</h3><div class="kv">
-      <div><span>Fiyat:</span> ${num(t.price)}</div>
+      <div><span>Fiyat:</span> ${num(t.price)}${cur}</div>
       <div><span>RSI:</span> ${num(t.rsi)}</div>
       <div><span>MA50:</span> ${num(t.ma50)}</div>
       <div><span>MA200:</span> ${num(t.ma200)}</div>
