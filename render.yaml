@@ -8,7 +8,9 @@ services:
     envVars:
       - key: ADMIN_TOKEN     # /api/refresh icin; Render panelinden gizli deger gir
         sync: false
+      - key: DATA_DIR        # SQLite buraya yazilir (kalici disk)
+        value: /data
     disk:                    # SQLite gecmisi yeniden baslatmada silinmesin
       name: data
-      mountPath: /app/backend
+      mountPath: /data       # ONEMLI: kod /app/backend'de; disk AYRI yola mount edilir
       sizeGB: 1

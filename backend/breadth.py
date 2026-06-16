@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -28,7 +29,15 @@ import yfinance as yf
 
 from . import markets
 
-DB_PATH = Path(__file__).parent / "breadth.db"
+# Veri dizini: host'ta kalici disk DATA_DIR ile verilir (orn. Render -> /data).
+# Verilmezse modul klasoru (lokal gelistirme). Kod dizininin UZERINE disk mount
+# edilmez; SQLite ayri DATA_DIR'de tutulur ki yeniden baslatmada silinmesin.
+_DATA_DIR = Path(os.environ.get("DATA_DIR", str(Path(__file__).parent)))
+try:
+    _DATA_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:  # noqa: BLE001
+    _DATA_DIR = Path(__file__).parent
+DB_PATH = _DATA_DIR / "breadth.db"
 THRESHOLD = 4.0  # yuzde esigi
 
 # Wikipedia erisilemezse devreye giren yedek liste (kismi ornek; tam liste online cekilir)
