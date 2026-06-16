@@ -8,9 +8,13 @@ services:
     envVars:
       - key: ADMIN_TOKEN     # /api/refresh icin; Render panelinden gizli deger gir
         sync: false
-      - key: DATA_DIR        # SQLite buraya yazilir (kalici disk)
-        value: /data
-    disk:                    # SQLite gecmisi yeniden baslatmada silinmesin
-      name: data
-      mountPath: /data       # ONEMLI: kod /app/backend'de; disk AYRI yola mount edilir
-      sizeGB: 1
+    # NOT: Kalici disk (persistent disk) Render'da SADECE ucretli planlarda var;
+    # 'plan: free' ile birlikte 'disk:' tanimi deploy'u reddediyordu. Bu yuzden disk YOK.
+    # SQLite gecmisi gecici (ephemeral): servis uyandiginda warm ile yfinance'ten
+    # ~3 aylik veri yeniden cekilip DB yeniden olusturulur. Kalicilik istenirse
+    # ucretli plana gecip asagidaki disk blogunu acmak ve DATA_DIR=/data env'i
+    # eklemek yeterli (kod DATA_DIR'i zaten destekliyor):
+    #   disk:
+    #     name: data
+    #     mountPath: /data
+    #     sizeGB: 1
